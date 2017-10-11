@@ -107,8 +107,14 @@ Sub Gen_Click()
 ' ------------------------------------------------------
     ' process first row
     
+    Dim xml_root$
+    xml_root$ = Trim(Range("doz_xml_root").Value)
+    If (InStr(xml_root$, " ") > 0) Then
+        xml_root$ = Left(xml_root, InStr(xml_root$, " ") - 1)
+    End If
+    
     Set objDom = New DOMDocument
-    Set objXMLRootelement = objDom.createElement(Range("doz_xml_root").Value)
+    Set objXMLRootelement = objDom.createElement(xml_root$)
     objDom.appendChild objXMLRootelement
 
     Dim cursor(5) As IXMLDOMElement
@@ -121,11 +127,19 @@ Sub Gen_Click()
         Set objXMLelement = objDom.createElement(structure(i))
         Set cursor(i + 1) = objXMLelement
         
-        For j = 0 To structure_attr_count(i) - 1
         
-            Set objXMLattr = objDom.createAttribute(header_attr(c))
-            objXMLattr.NodeValue = Range("doz_databegin").Offset(1, c).Value
-            objXMLelement.setAttributeNode objXMLattr
+        For j = 0 To structure_attr_count(i) - 1
+    
+            val$ = Range("doz_databegin").Offset(1, c).Value
+            
+            If (header_attr(c) = "nodeTypedValue") Then
+                objXMLelement.nodeTypedValue = val$
+            Else
+                Set objXMLattr = objDom.createAttribute(header_attr(c))
+                objXMLattr.NodeValue = val$
+                objXMLelement.setAttributeNode objXMLattr
+            End If
+            
 
             c = c + 1
         Next j ' attr
@@ -169,9 +183,13 @@ GOT_IDX:
                     val$ = Range("doz_databegin").Offset(r, c).Value
                     prev_row_val(c) = val$
                     
-                    Set objXMLattr = objDom.createAttribute(header_attr(c))
-                    objXMLattr.NodeValue = Range("doz_databegin").Offset(r, c).Value
-                    objXMLelement.setAttributeNode objXMLattr
+                    If (header_attr(c) = "nodeTypedValue") Then
+                        objXMLelement.nodeTypedValue = val$
+                    Else
+                        Set objXMLattr = objDom.createAttribute(header_attr(c))
+                        objXMLattr.NodeValue = val$
+                        objXMLelement.setAttributeNode objXMLattr
+                    End If
                     
                     c = c + 1
                 Next j ' attr
